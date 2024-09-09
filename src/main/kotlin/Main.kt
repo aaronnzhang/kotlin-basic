@@ -1,19 +1,29 @@
-import com.thoughtworks.kotlin_basic.util.PrintUtil
+import com.thoughtworks.kotlin_basic.service.ApiService
+import com.thoughtworks.kotlin_basic.service.ProductRepository
+import com.thoughtworks.kotlin_basic.model.ProductWithStock
+import kotlinx.coroutines.runBlocking
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
-fun main(args: Array<String>) {
-    println("Hello World!")
-    println("Program arguments: ${args.joinToString()}")
+fun displayProducts(products: List<ProductWithStock>) {
+    products.forEach { product ->
+        println("SKU: ${product.sku}, Name: ${product.name}, Price: ${product.price}, Stock: ${product.stock}, Image: ${product.imageUrl}")
+    }
+}
 
-    val printUtil = PrintUtil()
-    // Try adding program arguments via Run/Debug configuration.
-    // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
+fun createRetrofitService(): ApiService {
+    val retrofit = Retrofit.Builder()
+        .baseUrl("http://localhost:3000/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
-    val headers = listOf("ID", "Name", "Occupation")
-    val rows = listOf(
-        listOf("1", "Alice", "Software Engineer"),
-        listOf("2", "Bob", "Data Scientist"),
-        listOf("3", "Charlie", "Product Manager")
-    )
+    return retrofit.create(ApiService::class.java)
+}
 
-    printUtil.printTable(headers, rows)
+fun main() = runBlocking {
+    val apiService = createRetrofitService()
+    val repository = ProductRepository(apiService)
+
+    val productsWithStock = repository.getProductsWithStock()
+    displayProducts(productsWithStock)
 }
